@@ -4,7 +4,8 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 import datetime
 
-bot = Bot(token="YOUR_TOKEN")
+import os
+bot = Bot(token=os.getenv("BOT_TOKEN"))
 dp = Dispatcher()
 
 shifts = {}
