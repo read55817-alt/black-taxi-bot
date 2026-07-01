@@ -1,43 +1,68 @@
-import asyncio
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import asyncio
+import datetime
 
-TOKEN = "8985528943:AAEvYf4QSDcME0uqQTa7pxyg2ZxOTEUCkts"
-
-bot = Bot(token=TOKEN)
+bot = Bot(token="YOUR_TOKEN")
 dp = Dispatcher()
 
-menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🚕 Начать смену")],
-        [KeyboardButton(text="📊 Моя статистика")],
-        [KeyboardButton(text="🏆 Топ недели")],
-        [KeyboardButton(text="📖 Правила")]
-    ],
-    resize_keyboard=True
-)
+shifts = {}
 
-@dp.message()
-async def handler(message: types.Message):
+# ===== КНОПКИ =====
+def main_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🟢 Начать смену", callback_data="start_shift")],
+        [InlineKeyboardButton(text="🔴 Завершить смену", callback_data="end_shift")],
+        [InlineKeyboardButton(text="📊 Моя статистика", callback_data="stats")]
+    ])
 
-    if message.text == "/start":
-        await message.answer(
-            "🚖 BLACK TAXI\n\nДобро пожаловать!",
-            reply_markup=menu
-        )
+# ===== /start =====
+@dp.message(Command("start"))
+async def start(msg: types.Message):
+    await msg.answer(
+        "🚕 Black Taxi Manager\nВыбери действие:",
+        reply_markup=main_menu()
+    )
 
-    elif message.text == "🚕 Начать смену":
-        await message.answer("🟢 Смена начата")
+# ===== НАЖАТИЯ КНОПОК =====
+@dp.callback_query()
+async def handler(call: types.CallbackQuery):
+    user_id = call.from_user.id
 
-    elif message.text == "📊 Моя статистика":
-        await message.answer("📊 Пока нет данных")
+    # 🟢 START SHIFT
+    if call.data == "start_shift":
+        shifts[user_id] = {
+            "start": datetime.datetime.now(),
+            "end": None
+        }
+        await call.message.answer("🟢 Смена начата")
 
-    elif message.text == "🏆 Топ недели":
-        await message.answer("🏆 Скоро будет рейтинг")
+    # 🔴 END SHIFT
+    elif call.data == "end_shift":
+        if user_id not in shifts or shifts[user_id]["end"] is not None:
+            await call.message.answer("❌ Нет активной смены")
+            return
 
-    elif message.text == "📖 Правила":
-        await message.answer("📖 Работай и выполняй заказы")
+        shifts[user_id]["end"] = datetime.datetime.now()
 
+        start = shifts[user_id]["start"]
+        end = shifts[user_id]["end"]
+
+        duration = end - start
+
+        await call.message.answer(f"🔴 Смена завершена\n⏱ Время: {duration}")
+
+    # 📊 STATS
+    elif call.data == "stats":
+        if user_id not in shifts:
+            await call.message.answer("📊 Пока нет данных")
+        else:
+            await call.message.answer(str(shifts[user_id]))
+
+    await call.answer()
+
+# ===== RUN =====
 async def main():
     await dp.start_polling(bot)
 
