@@ -37,7 +37,7 @@ def menu():
 # ===== START =====
 @dp.message(Command("start"))
 async def start(msg: types.Message):
-    await msg.answer("🚕 Black Taxi Manager 2.0", reply_markup=menu())
+    await msg.answer("🔥 БОТ РАБОТАЕТ НОВАЯ ВЕРСИЯ", reply_markup=menu())
 
 # ===== CALLBACKS =====
 @dp.callback_query()
