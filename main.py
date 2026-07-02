@@ -107,3 +107,16 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+from aiogram.types import BotCommand
+
+async def main():
+    await bot.delete_my_commands()
+
+    await bot.set_my_commands([
+        BotCommand(command="start", description="Запустить бота")
+    ])
+
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
